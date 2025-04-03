@@ -111,7 +111,7 @@ export class App {
     );
   }
 
-  private async onRatioSliderChange(blobUrl: string) {
+  private async onRatioSliderChange() {
     this.Elements.ratioRange.addEventListener(
       "change",
       async (e) => {
@@ -179,7 +179,7 @@ export class App {
       this.resizeSettings.displayWidth
     )} x ${Math.floor(this.resizeSettings.displayHeight)}`;
 
-    this.onRatioSliderChange(blobUrl);
+    this.onRatioSliderChange();
     this.onCheckboxChange();
     this.onSelectChange();
   }

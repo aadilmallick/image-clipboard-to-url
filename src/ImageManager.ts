@@ -1,6 +1,5 @@
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
 
 if (!cloudName || !uploadPreset) {
   throw new Error("Cloudinary credentials not found");
