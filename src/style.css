@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+#image-container {
+  transform-origin: center center;
+  transition: transform 0.3s ease-in-out;
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 1rem;
+  position: relative;
+
+  img {
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+}
+
+.dimensions-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 0.2rem;
+}
