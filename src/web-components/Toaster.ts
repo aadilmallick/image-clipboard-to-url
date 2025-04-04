@@ -263,4 +263,20 @@ export default class Toaster extends WebComponent<typeof observedAttributes> {
   warning(message: string) {
     this.toast(message, "warning");
   }
+
+  static success(message: string) {
+    Toaster.toast(message, "success");
+  }
+
+  static info(message: string) {
+    Toaster.toast(message, "info");
+  }
+
+  static danger(message: string) {
+    Toaster.toast(message, "danger");
+  }
+
+  static warning(message: string) {
+    Toaster.toast(message, "warning");
+  }
 }

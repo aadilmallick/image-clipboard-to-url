@@ -203,3 +203,73 @@ export default class ImageConverter {
     });
   }
 }
+
+async function convertImage({
+  h,
+  img,
+  mimetype,
+  w,
+}: {
+  img: HTMLImageElement;
+  w: number;
+  h: number;
+  mimetype: string;
+}) {
+  // 1. create new canvas
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d")!;
+
+  // 2. draw image
+  context.drawImage(img, 0, 0, w, h);
+
+  // 3. asynchronously convert current canvas drawing to blob with mimetype
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      return blob !== null ? resolve(blob) : reject("no blob");
+    }, mimetype);
+  });
+}
+
+function loadImage(blob: Blob) {
+  const reader = new FileReader();
+
+  // Read the file
+  reader.readAsDataURL(blob);
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    reader.addEventListener("load", (e) => {
+      const dataUrl = e.target!.result as string;
+      const img = new Image();
+      img.src = dataUrl;
+      resolve(img);
+    });
+
+    reader.addEventListener("error", function () {
+      reject();
+    });
+  });
+}
+
+function getImageDimensions(img: HTMLImageElement) {
+  return new Promise<{
+    originalWidth: number;
+    originalHeight: number;
+  }>((resolve, reject) => {
+    img.addEventListener("load", () => {
+      resolve({
+        originalWidth: img.naturalWidth,
+        originalHeight: img.naturalHeight,
+      });
+    });
+  });
+}
+
+async function convertImageToWebp(blob: Blob) {
+  const img = await loadImage(blob);
+  const { originalHeight, originalWidth } = await getImageDimensions(img);
+  return await convertImage({
+    h: originalHeight,
+    w: originalWidth,
+    img,
+    mimetype: blob.type || "image/webp",
+  });
+}
