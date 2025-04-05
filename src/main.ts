@@ -1,11 +1,16 @@
 import { App } from "./App";
 import ClipboardModel from "./ClipboardManager";
+import { FileElement } from "./FileElement";
 import ImageConverter from "./ImageConverter";
 import { ImageManager } from "./ImageManager";
 import "./style.css";
+import { DOM } from "./utils";
 import Toaster from "./web-components/Toaster";
 
 Toaster.registerSelf();
+
+const fileInput = DOM.$throw("#file-upload") as HTMLInputElement;
+const fileUploadHandler = new FileElement(fileInput);
 
 const app = new App();
 app.setShowSettings(false);
@@ -15,6 +20,19 @@ const globalStore = {
   transformedBlob: null as Blob | null,
   loading: false,
 };
+
+fileUploadHandler.onSingleFileUpload(async (file) => {
+  if (globalStore.blobUrl) {
+    URL.revokeObjectURL(globalStore.blobUrl);
+    globalStore.blobUrl = null;
+  }
+
+  const blobUrl = URL.createObjectURL(file);
+  globalStore.blobUrl = blobUrl;
+
+  app.onNewPaste(blobUrl);
+  uploadImage(file);
+});
 
 document.addEventListener("paste", async (e) => {
   e.preventDefault();
@@ -40,6 +58,36 @@ document.addEventListener("paste", async (e) => {
   //   app.addImagePreview(blobUrl);
   app.onNewPaste(blobUrl);
   uploadImage(blob);
+});
+
+// on ctrl + b press download blob of current image
+document.addEventListener("keydown", async (e) => {
+  if (e.ctrlKey && e.key === "b") {
+    e.preventDefault();
+    const blobUrl = globalStore.blobUrl;
+    if (!blobUrl) {
+      throw new Error("No image found");
+    }
+    if (globalStore.loading) {
+      return;
+    }
+    // app.onDownload(blobUrl);
+    globalStore.loading = true;
+    Toaster.toast("Downloading image...", "info");
+    const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
+      app.getSettings();
+    const blob = await fetch(blobUrl).then((res) => res.blob());
+    const transformedBlob = await transformImage(blob, {
+      resizeSettings,
+      resizeBasedOnDisplayDims,
+      type: downloadType,
+    });
+    console.log(transformedBlob);
+    globalStore.loading = false;
+    Toaster.toast("Downloaded Image!", "success");
+
+    ImageConverter.downloadBlob(transformedBlob);
+  }
 });
 
 async function uploadImage(blob: Blob) {
@@ -77,36 +125,6 @@ async function uploadImage(blob: Blob) {
     }
   });
 }
-
-document.addEventListener("keydown", async (e) => {
-  // on ctrl + b press download blob of current image
-  if (e.ctrlKey && e.key === "b") {
-    e.preventDefault();
-    const blobUrl = globalStore.blobUrl;
-    if (!blobUrl) {
-      throw new Error("No image found");
-    }
-    if (globalStore.loading) {
-      return;
-    }
-    // app.onDownload(blobUrl);
-    globalStore.loading = true;
-    Toaster.toast("Downloading image...", "info");
-    const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
-      app.getSettings();
-    const blob = await fetch(blobUrl).then((res) => res.blob());
-    const transformedBlob = await transformImage(blob, {
-      resizeSettings,
-      resizeBasedOnDisplayDims,
-      type: downloadType,
-    });
-    console.log(transformedBlob);
-    globalStore.loading = false;
-    Toaster.toast("Downloaded Image!", "success");
-
-    ImageConverter.downloadBlob(transformedBlob);
-  }
-});
 
 async function transformImage(
   blob: Blob,
