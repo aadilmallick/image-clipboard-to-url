@@ -19,28 +19,37 @@ const globalStore = {
   blobUrl: null as string | null,
   transformedBlob: null as Blob | null,
   loading: false,
+  originalBlob: null as Blob | null,
+  resetState: () => {
+    if (globalStore.blobUrl) {
+      URL.revokeObjectURL(globalStore.blobUrl);
+      globalStore.blobUrl = null;
+      globalStore.originalBlob = null;
+      globalStore.transformedBlob = null;
+      globalStore.loading = false;
+    }
+  },
+  setBlob: (blob: Blob | File) => {
+    globalStore.originalBlob = blob;
+    const blobUrl = URL.createObjectURL(blob);
+    globalStore.blobUrl = blobUrl;
+    return blobUrl;
+  },
 };
 
 fileUploadHandler.onSingleFileUpload(async (file) => {
-  if (globalStore.blobUrl) {
-    URL.revokeObjectURL(globalStore.blobUrl);
-    globalStore.blobUrl = null;
-  }
-
-  const blobUrl = URL.createObjectURL(file);
-  globalStore.blobUrl = blobUrl;
+  globalStore.resetState();
+  const blobUrl = globalStore.setBlob(file);
 
   app.onNewPaste(blobUrl);
-  uploadImage(file);
+  app.addBlobInfo(file.size);
+  setUploadImageListener(file);
 });
 
 document.addEventListener("paste", async (e) => {
   e.preventDefault();
 
-  if (globalStore.blobUrl) {
-    URL.revokeObjectURL(globalStore.blobUrl);
-    globalStore.blobUrl = null;
-  }
+  globalStore.resetState();
   // * stage 1: read image from clipboard
   const blob = (await ClipboardModel.readClipboardDataAsImage({
     asBlob: true,
@@ -52,20 +61,18 @@ document.addEventListener("paste", async (e) => {
   console.log(blob);
 
   // display image in box
-  const blobUrl = URL.createObjectURL(blob);
-  globalStore.blobUrl = blobUrl;
-  //   app.setShowSettings(true);
-  //   app.addImagePreview(blobUrl);
+  const blobUrl = globalStore.setBlob(blob);
   app.onNewPaste(blobUrl);
-  uploadImage(blob);
+  app.addBlobInfo(blob.size);
+  setUploadImageListener(blob);
 });
 
 // on ctrl + b press download blob of current image
 document.addEventListener("keydown", async (e) => {
   if (e.ctrlKey && e.key === "b") {
     e.preventDefault();
-    const blobUrl = globalStore.blobUrl;
-    if (!blobUrl) {
+    if (!globalStore.originalBlob || !globalStore.blobUrl) {
+      Toaster.toast("No image found", "danger");
       throw new Error("No image found");
     }
     if (globalStore.loading) {
@@ -76,21 +83,40 @@ document.addEventListener("keydown", async (e) => {
     Toaster.toast("Downloading image...", "info");
     const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
       app.getSettings();
-    const blob = await fetch(blobUrl).then((res) => res.blob());
-    const transformedBlob = await transformImage(blob, {
+    const transformedBlob = await transformImage(globalStore.originalBlob, {
       resizeSettings,
       resizeBasedOnDisplayDims,
       type: downloadType,
     });
-    console.log(transformedBlob);
+
+    app.addBlobInfo(transformedBlob.size);
     globalStore.loading = false;
     Toaster.toast("Downloaded Image!", "success");
 
     ImageConverter.downloadBlob(transformedBlob);
   }
+  if (e.ctrlKey && e.key === "d") {
+    e.preventDefault();
+    if (!globalStore.originalBlob || !globalStore.blobUrl) {
+      Toaster.toast("No image found", "danger");
+      throw new Error("No image found");
+    }
+    if (globalStore.loading) {
+      return;
+    }
+    // app.onDownload(blobUrl);
+    globalStore.loading = true;
+    Toaster.toast("Downloading image...", "info");
+
+    app.addBlobInfo(globalStore.originalBlob.size);
+    globalStore.loading = false;
+    Toaster.toast("Downloaded Image!", "success");
+
+    ImageConverter.downloadBlob(globalStore.originalBlob);
+  }
 });
 
-async function uploadImage(blob: Blob) {
+async function setUploadImageListener(blob: Blob) {
   app.onUpload(async () => {
     // * stage 2: compress image and convert to webp
     globalStore.loading = true;
@@ -112,6 +138,8 @@ async function uploadImage(blob: Blob) {
       }
     );
     console.log(file);
+    app.addBlobInfo(file.size);
+
     try {
       const url = await imageManager.uploadFile(file);
       console.log(url);

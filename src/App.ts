@@ -38,6 +38,9 @@ export class App {
     dimensionsLabel: DOM.createDomElement(html`
       <span class="dimensions-label"></span>
     `) as HTMLSpanElement,
+    blobSizeLabel: DOM.createDomElement(html`
+      <p class="blob-size-label"></p>
+    `) as HTMLParagraphElement,
   };
   private settingsProxy = createReactiveProxy(
     "showSettings",
@@ -119,10 +122,6 @@ export class App {
         const value = target.value;
         this.Elements.ratioRange.setAttribute("value", value);
 
-        // get image width and height
-        // console.log(`imgWidth: ${width}, imgHeight: ${height}`);
-        // this.Elements.dimensionsLabel.innerText = `${width} x ${height}`;
-
         const ratio = parseFloat(value);
         this.setResizeFactor(ratio);
 
@@ -149,6 +148,15 @@ export class App {
 
   setShowSettings(showSettings: boolean) {
     this.settingsProxy.showSettings = showSettings;
+  }
+
+  addBlobInfo(blobSize: number) {
+    const blobSizeLabel = this.Elements.blobSizeLabel;
+    blobSizeLabel.innerText = `Blob Size: ${Math.floor(blobSize / 1024)} KB`;
+    // if already exists, remove it
+    if (!DOM.$(".blob-size-label")) {
+      this.Elements.settingsSection.appendChild(blobSizeLabel);
+    }
   }
 
   async addImagePreview(blobUrl: string) {

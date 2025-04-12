@@ -9,6 +9,7 @@
   <body>
     <section
       id="hero"
+      data-show="true"
       class="h-screen w-full bg-slate-50 grid place-items-center"
     >
       <div
@@ -71,9 +72,17 @@
         <p class="text-lg text-gray-400 text-center p-4">
           Ctrl + B to download once pasted
         </p>
+        <p class="text-lg text-gray-400 text-center p-4">
+          Ctrl + D to download original blob
+        </p>
         <div id="image-container"></div>
       </div>
     </section>
+    <section
+      id="multi-image-compress"
+      class="h-screen w-full bg-slate-50 grid place-items-center"
+      data-show="false"
+    ></section>
     <toaster-element position="top-right"></toaster-element>
     <script type="module" src="/src/main.ts"></script>
   </body>

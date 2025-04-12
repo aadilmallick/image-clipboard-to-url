@@ -15,10 +15,12 @@
   }
 }
 
-.dimensions-label {
+.dimensions-label,
+.blob-size-label {
   font-size: 0.8rem;
   font-weight: 600;
   color: white;
   background-color: rgba(0, 0, 0, 0.5);
   padding: 0.2rem;
+  width: fit-content;
 }
