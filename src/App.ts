@@ -204,6 +204,7 @@ export class App {
   addUploadUrl(url: string) {
     const urlElem = DOM.createDomElement(html`
       <p
+        id="upload-url"
         class="bg-gray-200 text-center mx-auto p-1 wrap-break-word text-wrap max-w-[30rem] cursor-pointer hover:bg-gray-400 rounded-md"
       >
         ${url}
@@ -257,9 +258,13 @@ export class App {
 
   onNewPaste(blobUrl: string) {
     this.setShowSettings(false);
+    console.log("New paste", blobUrl);
     this.removeImagePreview();
     this.setShowSettings(true);
     this.imagePreviewAborter.reset();
+    if (DOM.$("#upload-url")) {
+      DOM.$throw("#upload-url")!.remove();
+    }
     this.addImagePreview(blobUrl);
   }
 }
