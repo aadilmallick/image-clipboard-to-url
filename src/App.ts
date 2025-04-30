@@ -22,6 +22,12 @@ export class App {
   };
   private imagePreviewAborter = new AbortControllerManager();
   private Elements = {
+    urlElem: DOM.createDomElement(html`
+      <p
+        id="upload-url"
+        class="bg-gray-200 text-center mx-auto p-1 wrap-break-word text-wrap max-w-[30rem] cursor-pointer hover:bg-gray-400 rounded-md"
+      ></p>
+    `),
     settingsSection: DOM.$throw("#settings"),
     downloadTypeSelect: DOM.$throw("#download-type") as HTMLSelectElement,
     superCompressCheckbox: DOM.$throw("#super-compress") as HTMLInputElement,
@@ -202,22 +208,15 @@ export class App {
   }
 
   addUploadUrl(url: string) {
-    const urlElem = DOM.createDomElement(html`
-      <p
-        id="upload-url"
-        class="bg-gray-200 text-center mx-auto p-1 wrap-break-word text-wrap max-w-[30rem] cursor-pointer hover:bg-gray-400 rounded-md"
-      >
-        ${url}
-      </p>
-    `);
-    this.Elements.settingsSection.appendChild(urlElem);
-    urlElem.addEventListener(
+    this.Elements.settingsSection.appendChild(this.Elements.urlElem);
+    this.Elements.urlElem.innerText = url;
+    this.Elements.urlElem.addEventListener(
       "click",
       () => {
         navigator.clipboard.writeText(url);
-        urlElem.textContent = "Copied to clipboard!";
+        this.Elements.urlElem.textContent = "Copied to clipboard!";
         setTimeout(() => {
-          urlElem.textContent = url;
+          this.Elements.urlElem.textContent = url;
         }, 2000);
       },
       {

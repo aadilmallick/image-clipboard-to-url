@@ -20,6 +20,7 @@ const globalStore = {
   transformedBlob: null as Blob | null,
   loading: false,
   originalBlob: null as Blob | null,
+  originalFile: null as File | null,
   resetState: () => {
     if (globalStore.blobUrl) {
       URL.revokeObjectURL(globalStore.blobUrl);
@@ -83,7 +84,7 @@ document.addEventListener("keydown", async (e) => {
     Toaster.toast("Downloading image...", "info");
     const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
       app.getSettings();
-    const transformedBlob = await transformImage(globalStore.originalBlob, {
+    const transformedBlob = await transformImage(globalStore.originalBlob!, {
       resizeSettings,
       resizeBasedOnDisplayDims,
       type: downloadType,
@@ -108,11 +109,30 @@ document.addEventListener("keydown", async (e) => {
     globalStore.loading = true;
     Toaster.toast("Downloading image...", "info");
 
-    app.addBlobInfo(globalStore.originalBlob.size);
+    app.addBlobInfo(globalStore.originalBlob!.size);
     globalStore.loading = false;
     Toaster.toast("Downloaded Image!", "success");
 
-    ImageConverter.downloadBlob(globalStore.originalBlob);
+    ImageConverter.downloadBlob(globalStore.originalBlob!);
+  }
+  if (e.ctrlKey && e.key === "y") {
+    e.preventDefault();
+    if (!globalStore.originalBlob || !globalStore.blobUrl) {
+      Toaster.toast("No image found", "danger");
+      throw new Error("No image found");
+    }
+    if (globalStore.loading) {
+      return;
+    }
+    // app.onDownload(blobUrl);
+    globalStore.loading = true;
+    Toaster.toast("Uploading image...", "info");
+
+    app.addBlobInfo(globalStore.originalBlob!.size);
+    globalStore.loading = false;
+    Toaster.toast("Uploaded Image!", "success");
+
+    uploadImage(globalStore.originalBlob!);
   }
 });
 
@@ -129,31 +149,53 @@ async function setUploadImageListener(blob: Blob) {
       type: downloadType,
     });
     // * stage 3: upload image to cloudinary
-    const imageManager = new ImageManager();
-    const file = new File(
-      [transformedBlob],
-      `image-${crypto.randomUUID()}.${blob.type}`,
-      {
-        type: blob.type,
-      }
-    );
-    console.log(file);
-    app.addBlobInfo(file.size);
-
-    try {
-      const url = await imageManager.uploadFile(file);
-      console.log(url);
-      app.addUploadUrl(url);
-    } catch (e) {
-      Toaster.toast("Error uploading image", "danger");
-      console.error(e);
-    } finally {
-      globalStore.loading = false;
-      Toaster.toast("Uploaded Image!", "success");
-    }
+    const uploadUrl = await uploadImage(transformedBlob);
+    console.log(uploadUrl);
   });
 }
 
+function getFileExtensionFromMimeType(mimeType: string): string {
+  const mimeToExtensionMap: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/bmp": "bmp",
+    "image/svg+xml": "svg",
+    "image/tiff": "tiff",
+    "image/x-icon": "ico",
+  };
+
+  return mimeToExtensionMap[mimeType] || "bin"; // Default to "bin" if mime type is unknown
+}
+
+async function uploadImage(blob: Blob) {
+  const imageManager = new ImageManager();
+  const file = new File(
+    [blob],
+    `image-${crypto.randomUUID()}.${getFileExtensionFromMimeType(blob.type)}`,
+    {
+      type: blob.type,
+    }
+  );
+  console.log(file);
+  app.addBlobInfo(file.size);
+
+  try {
+    const url = await imageManager.uploadFile(file);
+    console.log(url);
+    app.addUploadUrl(url);
+    return url;
+  } catch (e) {
+    Toaster.toast("Error uploading image", "danger");
+    console.error(e);
+    return null;
+  } finally {
+    globalStore.loading = false;
+    Toaster.toast("Uploaded Image!", "success");
+    return null;
+  }
+}
 async function transformImage(
   blob: Blob,
   options: {
