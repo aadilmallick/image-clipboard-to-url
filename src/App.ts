@@ -36,7 +36,7 @@ export class App {
     uploadButton: DOM.createDomElement(html`
       <button
         id="upload-button"
-        class="w-full block px-4 py-2 bg-black text-white font-semibold text-base rounded-lg shadow-md cursor-pointer hover:opacity-75 transition-opacity duration-200"
+        class="w-full block px-4 py-2 bg-black text-white font-semibold text-base rounded-lg shadow-md cursor-pointer hover:opacity-75 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Upload
       </button>
@@ -243,6 +243,16 @@ export class App {
     this.Elements.imageContainer.innerHTML = "";
   }
 
+  handleAppLoading(loading: boolean) {
+    if (loading) {
+      this.Elements.uploadButton.innerText = "Loading...";
+      this.Elements.uploadButton.setAttribute("disabled", "true");
+    } else {
+      this.Elements.uploadButton.innerText = "Upload";
+      this.Elements.uploadButton.removeAttribute("disabled");
+    }
+  }
+
   onUpload(callback: () => void) {
     this.Elements.uploadButton.addEventListener(
       "click",
@@ -257,6 +267,7 @@ export class App {
 
   onNewPaste(blobUrl: string) {
     this.setShowSettings(false);
+    this.Elements.ratioRange.value = "1";
     console.log("New paste", blobUrl);
     this.removeImagePreview();
     this.setShowSettings(true);

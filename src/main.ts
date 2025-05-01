@@ -126,11 +126,11 @@ document.addEventListener("keydown", async (e) => {
     }
     // app.onDownload(blobUrl);
     globalStore.loading = true;
+
     Toaster.toast("Uploading image...", "info");
 
     app.addBlobInfo(globalStore.originalBlob!.size);
     globalStore.loading = false;
-    Toaster.toast("Uploaded Image!", "success");
 
     uploadImage(globalStore.originalBlob!);
   }
@@ -140,6 +140,7 @@ async function setUploadImageListener(blob: Blob) {
   app.onUpload(async () => {
     // * stage 2: compress image and convert to webp
     globalStore.loading = true;
+    app.handleAppLoading(true);
     Toaster.toast("Compressing image...", "info");
     const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
       app.getSettings();
@@ -151,6 +152,7 @@ async function setUploadImageListener(blob: Blob) {
     // * stage 3: upload image to cloudinary
     const uploadUrl = await uploadImage(transformedBlob);
     console.log(uploadUrl);
+    app.handleAppLoading(false);
   });
 }
 
