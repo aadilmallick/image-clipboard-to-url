@@ -1,12 +1,11 @@
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-if (!cloudName || !uploadPreset) {
-  throw new Error("Cloudinary credentials not found");
-}
-
 export class ImageManager {
   async uploadFile(file: File) {
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary credentials not found");
+    }
     const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
     const fd = new FormData();
     fd.append("upload_preset", uploadPreset);

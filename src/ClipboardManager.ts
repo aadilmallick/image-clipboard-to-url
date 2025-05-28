@@ -64,9 +64,23 @@ export default class ClipboardModel {
       const imageBlob = await response.blob();
       await ClipboardModel.copyBlobToClipboard(imageBlob, mimeType);
     } else {
+      // if image is not png, we need to convert it to png because clipboard only supports png
       const imageBlob = await ClipboardModel.setCanvasImage(path);
       await ClipboardModel.copyBlobToClipboard(imageBlob, mimeType);
     }
+  }
+
+  static async copyImageBlob(blob: Blob) {
+    const mimeType = blob.type;
+    // if image is not png, we need to convert it to png because clipboard only supports png
+    // if (mimeType !== "image/png") {
+    //   const blobUrl = URL.createObjectURL(blob);
+    //   const imageBlob = await ClipboardModel.setCanvasImage(blobUrl);
+    //   await ClipboardModel.copyBlobToClipboard(imageBlob, mimeType);
+    //   URL.revokeObjectURL(blobUrl);
+    // } else {
+    await ClipboardModel.copyBlobToClipboard(blob, "image/png");
+    // }
   }
 
   private static async copyBlobToClipboard(blob: Blob, mimeType: string) {

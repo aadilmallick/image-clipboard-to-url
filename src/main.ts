@@ -134,6 +134,30 @@ document.addEventListener("keydown", async (e) => {
 
     uploadImage(globalStore.originalBlob!);
   }
+  if (e.ctrlKey && e.key === "x") {
+    e.preventDefault();
+    if (!globalStore.originalBlob || !globalStore.blobUrl) {
+      Toaster.toast("No image found", "danger");
+      throw new Error("No image found");
+    }
+    if (globalStore.loading) {
+      return;
+    }
+    globalStore.loading = true;
+    Toaster.toast("Copying transformed image...", "info");
+    const { downloadType, resizeBasedOnDisplayDims, resizeSettings } =
+      app.getSettings();
+    const transformedBlob = await transformImage(globalStore.originalBlob!, {
+      resizeSettings,
+      resizeBasedOnDisplayDims,
+      type: downloadType,
+    });
+
+    app.addBlobInfo(transformedBlob.size);
+    await ClipboardModel.copyImageBlob(transformedBlob);
+    globalStore.loading = false;
+    Toaster.toast("Copied transformed image!", "success");
+  }
 });
 
 async function setUploadImageListener(blob: Blob) {

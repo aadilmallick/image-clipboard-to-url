@@ -175,6 +175,7 @@ export class App {
       "beforebegin",
       this.Elements.uploadButton
     );
+
     this.showImagePreviewProxy.showImagePreview = true;
 
     // show image preview dimensions
