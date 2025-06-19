@@ -3,8 +3,9 @@ import ClipboardModel from "./ClipboardManager";
 import { FileElement } from "./FileElement";
 import ImageConverter from "./ImageConverter";
 import { ImageManager } from "./ImageManager";
+import { PWAModel } from "./pwa/PWAModel";
 import "./style.css";
-import { DOM } from "./utils";
+import { DOM, html } from "./utils";
 import Toaster from "./web-components/Toaster";
 
 Toaster.registerSelf();
@@ -196,6 +197,10 @@ function getFileExtensionFromMimeType(mimeType: string): string {
 }
 
 async function uploadImage(blob: Blob) {
+  if (!navigator.onLine) {
+    Toaster.toast("No internet connection. Can't upload image.", "danger");
+    return null;
+  }
   const imageManager = new ImageManager();
   const file = new File(
     [blob],
@@ -222,6 +227,7 @@ async function uploadImage(blob: Blob) {
     return null;
   }
 }
+
 async function transformImage(
   blob: Blob,
   options: {
@@ -253,4 +259,43 @@ async function transformImage(
     );
   }
   return transformedBlob;
+}
+
+const { setupInstallPrompt, install } = PWAModel.installPWA();
+
+setupInstallPrompt();
+
+if (!PWAModel.isInPWA()) {
+  const appBanner = DOM.createDomElement(html`
+    <div
+      class="fixed bottom-4 left-4 bg-white/75 py-2 px-8 text-center rounded-lg shadow-lg space-y-2 z-50 border-2 border-gray-300"
+    >
+      <p class="text-sm">Install App?</p>
+      <button
+        class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+      >
+        Install
+      </button>
+    </div>
+  `);
+  const controller = new AbortController();
+  appBanner.querySelector("button")?.addEventListener(
+    "click",
+    async () => {
+      const success = await install();
+      if (success) {
+        Toaster.toast("App installed!", "success");
+        appBanner.remove();
+        controller.abort();
+      } else {
+        Toaster.toast("App not installed", "info");
+      }
+    },
+    {
+      signal: controller.signal,
+    }
+  );
+  document.body.appendChild(appBanner);
+} else {
+  Toaster.toast("App already installed", "info");
 }
