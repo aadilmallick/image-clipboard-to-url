@@ -1,13 +1,4 @@
-import Toaster from "../web-components/Toaster";
-
 export class PWAModel {
-  static async registerWorker(url: string) {
-    return await navigator.serviceWorker.register(url, {
-      type: "module",
-      scope: "/",
-    });
-  }
-
   static isInPWA() {
     let displayMode = "browser tab";
     if (window.matchMedia("(display-mode: standalone)").matches) {
@@ -99,7 +90,30 @@ export class PWAModel {
   }
 }
 
+export class PWAServiceWorkerClient {
+  static async registerWorker(url: string) {
+    return await navigator.serviceWorker.register(url, {
+      type: "module",
+      scope: "/",
+    });
+  }
+
+  static async getCurrentWorker() {
+    return await navigator.serviceWorker.ready;
+  }
+
+  static async onWorkerChange(cb: (worker: ServiceWorker) => void) {
+    navigator.serviceWorker.addEventListener("controllerchange", (event) => {
+      cb(event.target as ServiceWorker);
+    });
+  }
+}
+
 export class PWABadger {
+  static isBadgeSupported() {
+    return "setAppBadge" in navigator && "clearAppBadge" in navigator;
+  }
+
   static async setBadge(badge: number) {
     if (navigator.setAppBadge) {
       await navigator.setAppBadge(badge);
@@ -110,5 +124,18 @@ export class PWABadger {
     if (navigator.clearAppBadge) {
       await navigator.clearAppBadge();
     }
+  }
+}
+
+export class MessageSystem<T extends Record<string, any>> {
+  getDispatchMessage<K extends keyof T>(key: K, payload: T[K]) {
+    return {
+      type: key,
+      payload,
+    };
+  }
+
+  messageIsOfType<K extends keyof T>(key: K, message: any): message is T[K] {
+    return message.type === key;
   }
 }

@@ -261,41 +261,60 @@ async function transformImage(
   return transformedBlob;
 }
 
-const { setupInstallPrompt, install } = PWAModel.installPWA();
-
-setupInstallPrompt();
-
-if (!PWAModel.isInPWA()) {
-  const appBanner = DOM.createDomElement(html`
-    <div
-      class="fixed bottom-4 left-4 bg-white/75 py-2 px-8 text-center rounded-lg shadow-lg space-y-2 z-50 border-2 border-gray-300"
+const appBanner = DOM.createDomElement(html`
+  <div
+    class="fixed bottom-4 left-4 bg-white/75 py-2 px-8 text-center rounded-lg shadow-lg space-y-2 z-50 border-2 border-gray-300"
+  >
+    <p class="text-sm">Install App?</p>
+    <button
+      class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
     >
-      <p class="text-sm">Install App?</p>
-      <button
-        class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
-      >
-        Install
-      </button>
-    </div>
-  `);
-  const controller = new AbortController();
-  appBanner.querySelector("button")?.addEventListener(
-    "click",
-    async () => {
-      const success = await install();
-      if (success) {
-        Toaster.toast("App installed!", "success");
-        appBanner.remove();
-        controller.abort();
-      } else {
-        Toaster.toast("App not installed", "info");
-      }
+      Install
+    </button>
+  </div>
+`);
+
+const appBanner$throw = DOM.createQuerySelectorWithThrow(appBanner);
+
+PWAModel.showInstallPromptBanner({
+  banner: appBanner,
+  installButton: appBanner$throw("button")!,
+  onAlreadyInstalled: () => {
+    Toaster.info("already installed");
+  },
+  onInstallFailure: () => {
+    Toaster.danger("user refused to install");
+  },
+  onInstallSuccess: () => {
+    Toaster.info("user installed our malware successfully!");
+  },
+});
+
+const offlineBanner = DOM.createDomElement(
+  html`<div class="fixed top-0 left-0 w-screen p-4 text-center">
+    You're offline!
+  </div>`
+);
+document.body.appendChild(offlineBanner);
+offlineBanner.style.display = "none";
+
+function pollConnectivity(cb: (offline: boolean) => void) {
+  const intervalId = setInterval(() => {
+    cb(navigator.onLine);
+  }, 10000);
+
+  return {
+    clearConnectivityInterval: () => {
+      clearInterval(intervalId);
     },
-    {
-      signal: controller.signal,
-    }
-  );
-  document.body.appendChild(appBanner);
-} else {
-  Toaster.toast("App already installed", "info");
+  };
 }
+
+const { clearConnectivityInterval } = pollConnectivity((isOnline) => {
+  if (isOnline) {
+    offlineBanner.style.display = "none";
+    clearConnectivityInterval();
+  } else {
+    offlineBanner.style.display = "block";
+  }
+});

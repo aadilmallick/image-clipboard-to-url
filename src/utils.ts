@@ -47,7 +47,7 @@ export class DOM {
     return ((_class: keyof HTMLElementTagNameMap) => {
       const query = select(_class);
       if (!query) throw new Error(`Element with selector ${_class} not found`);
-      return query;
+      return query as typeof query extends null ? never : typeof query;
     }) as Selector;
   }
 }
