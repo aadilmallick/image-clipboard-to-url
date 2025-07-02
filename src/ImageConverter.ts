@@ -169,6 +169,8 @@ export default class ImageConverter {
 
           // Draw the image that is scaled to `ratio`
           const context = canvas.getContext("2d")!;
+          context.imageSmoothingEnabled = false;
+          context.imageSmoothingQuality = "high";
           let w = ele.naturalWidth;
           let h = ele.naturalHeight;
           if (options?.getNewDims) {
