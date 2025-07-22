@@ -25,7 +25,7 @@ export default class ClipboardModel {
     return null;
   }
 
-  static async readClipboardDataAsImage(options?: { asBlob?: boolean }) {
+  static async readClipboardDataAsImage() {
     if (await ClipboardModel.hasImageCopied()) {
       const [clipboardItem] = await navigator.clipboard.read();
       const mimeType = clipboardItem.types.find((type) =>
@@ -33,9 +33,6 @@ export default class ClipboardModel {
       );
       if (!mimeType) return null;
       const blob = await clipboardItem.getType(mimeType);
-      if (options?.asBlob) {
-        return blob;
-      }
       const blobUrl = URL.createObjectURL(blob);
       return blobUrl;
     }
