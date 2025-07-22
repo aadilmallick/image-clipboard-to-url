@@ -55,16 +55,17 @@ document.addEventListener("paste", async (e) => {
 
   globalStore.resetState();
   // * stage 1: read image from clipboard
-  const blobUrl = (await ClipboardModel.readClipboardDataAsImage()) as string;
-  if (!blobUrl) {
+  const blob = (await ClipboardModel.readClipboardDataAsImage({
+    asBlob: true,
+  })) as Blob;
+  if (!blob) {
     Toaster.toast("No image found in clipboard", "danger");
     throw new Error("No image found");
   }
-  console.log(blobUrl);
+  console.log(blob);
 
   // display image in box
-  const blob = await (await fetch(blobUrl)).blob();
-  globalStore.setBlob(blob);
+  const blobUrl = globalStore.setBlob(blob);
   app.onNewPaste(blobUrl);
   app.addBlobInfo(blob.size);
   setUploadImageListener(blob);
