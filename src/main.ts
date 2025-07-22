@@ -32,6 +32,7 @@ const globalStore = {
     }
   },
   setBlob: (blob: Blob | File) => {
+    console.log("blob size", blob.size);
     globalStore.originalBlob = blob;
     const blobUrl = URL.createObjectURL(blob);
     globalStore.blobUrl = blobUrl;
@@ -49,6 +50,7 @@ fileUploadHandler.onSingleFileUpload(async (file) => {
 });
 
 document.addEventListener("paste", async (e) => {
+  console.log("paste");
   e.preventDefault();
 
   globalStore.resetState();
@@ -158,6 +160,18 @@ document.addEventListener("keydown", async (e) => {
     await ClipboardModel.copyImageBlob(transformedBlob);
     globalStore.loading = false;
     Toaster.toast("Copied transformed image!", "success");
+  }
+  if (e.ctrlKey && e.key === "u") {
+    e.preventDefault();
+    if (!globalStore.originalBlob || !globalStore.blobUrl) {
+      Toaster.toast("No image found", "danger");
+      throw new Error("No image found");
+    }
+    console.log(globalStore.originalBlob.size);
+    app.addBlobInfo(globalStore.originalBlob.size);
+    await ClipboardModel.copyImageBlob(globalStore.originalBlob);
+    globalStore.loading = false;
+    Toaster.toast("Copied original image!", "success");
   }
 });
 

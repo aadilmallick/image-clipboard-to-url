@@ -231,7 +231,6 @@ export default class Toaster extends WebComponent<typeof observedAttributes> {
 
   static toast(message: string, type: ToastType = "default") {
     const toasterElement = document.querySelector("toaster-element") as Toaster;
-    console.log(toasterElement);
     if (!toasterElement) {
       throw new Error("Toaster element not found");
     }
