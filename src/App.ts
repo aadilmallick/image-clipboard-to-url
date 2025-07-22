@@ -332,7 +332,6 @@ export class App {
     this.setShowSettings(false);
     this.Elements.ratioRange.value = "1";
     console.log("New paste", blobUrl);
-    this.removeImagePreview();
     this.setShowSettings(true);
     this.imagePreviewAborter.reset();
     if (DOM.$("#upload-url")) {
