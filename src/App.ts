@@ -38,6 +38,7 @@ export class App {
     downloadTypeSelect: DOM.$throw("#download-type") as HTMLSelectElement,
     superCompressCheckbox: DOM.$throw("#super-compress") as HTMLInputElement,
     ratioRange: DOM.$throw("#scale") as HTMLInputElement,
+    widthInput: DOM.$throw("#width-input") as HTMLInputElement,
     imageContainer: DOM.$throw("#image-container"),
     uploadButton: DOM.createDomElement(html`
       <button
@@ -169,6 +170,41 @@ export class App {
         this.Elements.dimensionsLabel.innerText = `Real Dims: ${newRealWidth} x ${newRealHeight} \n Display Dims: ${newDisplayWidth} x ${newDisplayHeight}`;
 
         this.Elements.imageContainer.style.transform = `scale(${ratio})`;
+        this.Elements.widthInput.value = newRealWidth.toString();
+      },
+      {
+        signal: this.imagePreviewAborter.signal,
+      }
+    );
+  }
+
+  private async onWidthInputChange() {
+    this.Elements.widthInput.addEventListener(
+      "change",
+      async (e) => {
+        const target = e.target as HTMLInputElement;
+        const newWidth = parseInt(target.value);
+        if (isNaN(newWidth) || newWidth <= 0) {
+          return;
+        }
+        const newScale = newWidth / this.imageInfo.originalWidth;
+        this.Elements.ratioRange.value = newScale.toString();
+        this.setResizeFactor(newScale);
+
+        const newRealWidth = Math.floor(this.resizeSettings.resizeWidth);
+        const newRealHeight = Math.floor(this.resizeSettings.resizeHeight);
+        const newDisplayWidth = Math.floor(this.resizeSettings.displayWidth);
+        const newDisplayHeight = Math.floor(this.resizeSettings.displayHeight);
+        console.table({
+          newRealWidth,
+          newRealHeight,
+          newDisplayWidth,
+          newDisplayHeight,
+        });
+
+        this.Elements.dimensionsLabel.innerText = `Real Dims: ${newRealWidth} x ${newRealHeight} \n Display Dims: ${newDisplayWidth} x ${newDisplayHeight}`;
+
+        this.Elements.imageContainer.style.transform = `scale(${newScale})`;
       },
       {
         signal: this.imagePreviewAborter.signal,
@@ -217,10 +253,12 @@ export class App {
     )} \n Display Dims: ${Math.floor(
       this.resizeSettings.displayWidth
     )} x ${Math.floor(this.resizeSettings.displayHeight)}`;
+    this.Elements.widthInput.value = this.resizeSettings.resizeWidth.toString();
 
     this.onRatioSliderChange();
     this.onCheckboxChange();
     this.onSelectChange();
+    this.onWidthInputChange();
   }
 
   setResizeFactor(resize: number) {
