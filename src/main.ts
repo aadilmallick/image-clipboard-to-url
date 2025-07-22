@@ -216,6 +216,7 @@ async function uploadImage(blob: Blob) {
     const url = await imageManager.uploadFile(file);
     console.log(url);
     app.addUploadUrl(url);
+    app.addMarkdownUrl(url);
     return url;
   } catch (e) {
     Toaster.toast("Error uploading image", "danger");

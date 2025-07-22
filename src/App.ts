@@ -28,6 +28,12 @@ export class App {
         class="bg-gray-200 text-center mx-auto p-1 wrap-break-word text-wrap max-w-[30rem] cursor-pointer hover:bg-gray-400 rounded-md"
       ></p>
     `),
+    markdownUrlElem: DOM.createDomElement(html`
+      <p
+        id="markdown-url"
+        class="bg-gray-200 text-center mx-auto p-1 wrap-break-word text-wrap max-w-[30rem] cursor-pointer hover:bg-gray-400 rounded-md"
+      ></p>
+    `),
     settingsSection: DOM.$throw("#settings"),
     downloadTypeSelect: DOM.$throw("#download-type") as HTMLSelectElement,
     superCompressCheckbox: DOM.$throw("#super-compress") as HTMLInputElement,
@@ -99,6 +105,24 @@ export class App {
         const target = e.target as HTMLSelectElement;
         const value = target.value as "png" | "jpeg" | "webp";
         appStorage.set("downloadType", value);
+      },
+      {
+        signal: this.imagePreviewAborter.signal,
+      }
+    );
+  }
+
+  addMarkdownUrl(url: string) {
+    this.Elements.settingsSection.appendChild(this.Elements.markdownUrlElem);
+    this.Elements.markdownUrlElem.innerText = `![](${url})`;
+    this.Elements.markdownUrlElem.addEventListener(
+      "click",
+      () => {
+        navigator.clipboard.writeText(`![](${url})`);
+        this.Elements.markdownUrlElem.textContent = "Copied to clipboard!";
+        setTimeout(() => {
+          this.Elements.markdownUrlElem.textContent = `![](${url})`;
+        }, 2000);
       },
       {
         signal: this.imagePreviewAborter.signal,
@@ -275,6 +299,9 @@ export class App {
     this.imagePreviewAborter.reset();
     if (DOM.$("#upload-url")) {
       DOM.$throw("#upload-url")!.remove();
+    }
+    if (DOM.$("#markdown-url")) {
+      DOM.$throw("#markdown-url")!.remove();
     }
     this.addImagePreview(blobUrl);
   }
