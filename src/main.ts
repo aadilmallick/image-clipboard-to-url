@@ -1,3 +1,18 @@
+function authenticateUser() {
+  let authenticated = false;
+  while (!authenticated) {
+    const username = window.prompt("Please enter username:");
+    const password = window.prompt("Please enter password:");
+    if (username === "2022amallick" && password === "chud4ever") {
+      authenticated = true;
+    } else {
+      alert("Invalid credentials. Please try again.");
+    }
+  }
+}
+
+authenticateUser();
+
 import { App } from "./App";
 import ClipboardModel from "./ClipboardManager";
 import { FileElement } from "./FileElement";
