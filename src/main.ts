@@ -1,17 +1,34 @@
-function authenticateUser() {
-  let authenticated = false;
-  while (!authenticated) {
+function authenticateUser(): boolean {
+  const expectedPassword =
+    (import.meta.env && import.meta.env.VITE_PUBLIC_PASSWORD) || "chud4ever";
+  while (true) {
     const username = window.prompt("Please enter username:");
+    if (username === null) {
+      return false;
+    }
     const password = window.prompt("Please enter password:");
-    if (username === "2022amallick" && password === "chud4ever") {
-      authenticated = true;
+    if (password === null) {
+      return false;
+    }
+    if (username === "2022amallick" && password === expectedPassword) {
+      return true;
     } else {
       alert("Invalid credentials. Please try again.");
     }
   }
 }
 
-authenticateUser();
+if (!authenticateUser()) {
+  document.body.innerHTML = `
+    <div class="h-screen w-full bg-slate-50 grid place-items-center">
+      <div class="p-8 bg-white rounded-lg shadow-lg text-center border-2 border-red-200">
+        <h1 class="text-2xl font-bold text-red-600 mb-2">Access Cancelled</h1>
+        <p class="text-gray-600">Authentication was cancelled. Reload the page to try again.</p>
+      </div>
+    </div>
+  `;
+  throw new Error("Authentication cancelled by user.");
+}
 
 import { App } from "./App";
 import ClipboardModel from "./ClipboardManager";
